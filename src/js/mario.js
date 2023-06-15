@@ -1,7 +1,9 @@
+const platform = "../../src/img/platform.png";
+
 const canvas = document.getElementById("canvasBox");
 const c = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = 1600;
+canvas.height = 900;
 
 const gravity = .5;
 
@@ -23,7 +25,7 @@ class Player {
         this.draw();
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
-        if (this.position.y < canvas.height - this.height / 2 - this.velocity.y - 30){
+        if (this.position.y < canvas.height - this.height / 2 - this.velocity.y){
             this.velocity.y += gravity;
         }else{
             this.velocity.y = 0;            
@@ -38,18 +40,18 @@ class Player {
 }
 
 class Platform {
-    constructor({x, y}){
+    constructor({x, y, image}){
         this.position = {
             x,
             y
         };
-        this.width = 200;
-        this.height = 20;
+        this.image = image;
+        this.width = image.width;
+        this.height = image.height;
     }
 
     draw(){
-        c.fillStyle = "blue";
-        c.fillRect(this.position.x, this.position.y, this.width, this.height);
+        c.drawImage(this.image, this.position.x, this.position.y);     
     }
 }
 
@@ -70,26 +72,29 @@ const keys = {
     }
 }
 
+const image = new Image();
+image.src = platform;
+let scrollOffset = 0;
 const player = new Player();
 const platforms = [];
 const init = () => {
-    let x = 200;
-    let y = 600;
+    let w = 200;
+    let z = 500;
     for (let i=0; i<50; i++){
-        x += 300;
-        y -= 100;
-        platforms.push(new Platform({x, y}));
+        w += 700;
+        z -= 0;
+        platforms.push(new Platform({x: 0, y: canvas.height - image.height, image }))
+        platforms.push(new Platform({x: image.width, y: canvas.height - image.height, image }))
+        platforms.push(new Platform({x: image.width * 2, y: canvas.height - image.height, image }))
+        platforms.push(new Platform({x: w, y: z, image})); 
     }
 
 }
 
 const animate = () => {
     const animationFrame = requestAnimationFrame(animate);
-    c.clearRect(0, 0, canvas.width, canvas.height);
-    c.fillStyle = "yellow";
-    c.fillRect(0, canvas.height - 30, canvas.width, 30);
-
-    player.update();
+    c.fillStyle = "white";
+    c.fillRect(0, 0, canvas.width, canvas.height);
 
     if(keys.right.pressed && player.position.x <= canvas.width / 2){
         player.velocity.x = 5;
@@ -98,10 +103,12 @@ const animate = () => {
     }else{
         player.velocity.x = 0;
         if (keys.right.pressed){
+            scrollOffset += 5;     
             platforms.forEach(platform => {
                 platform.position.x -= 5;
             })
         }else if(keys.left.pressed){
+            scrollOffset -= 5;
             platforms.forEach(platform => {
                 platform.position.x += 5;
             })
@@ -110,7 +117,7 @@ const animate = () => {
 
     // jumping 
     if(keys.up.pressed && keys.up.count <= 1){
-        player.velocity.y = -16;
+        player.velocity.y = -20;
         keys.up.count++;
     }
 
@@ -121,18 +128,23 @@ const animate = () => {
 
         if(player.position.y + player.height / 2 <= platform.position.y 
         && player.position.y + player.height / 2+ player.velocity.y >= platform.position.y
-        && (player.position.x > platform.position.x && player.position.x < platform.position.x + platform.width)){
+        && (player.position.x + player.width / 2 >= platform.position.x && player.position.x <= platform.position.x + platform.width)){
             player.velocity.y = 0;
             keys.up.count = 0;
         }
-        //detection to disallow multiple jumping PART 2
-        if(player.position.y == canvas.height - player.height / 2 - player.velocity.y - 30){
+        //detection if player touched bottom
+        if(player.position.y == canvas.height - player.height / 2 - player.velocity.y){
             keys.up.count = 0;
+            console.log("you lost");
         }
     })
     
+    if (scrollOffset > 2000){
+        console.log("You won");
+    }
 
-    console.log(keys.up.count);
+    player.update();
+
 }
 
 init();
@@ -176,4 +188,9 @@ addEventListener("keyup", ({key}) => {
 
 
     }
+})
+
+
+addEventListener("resize", () =>{
+    location.reload(true);
 })
