@@ -1,4 +1,6 @@
 const platform = "../../src/img/platform.png";
+const hills = "../../src/img/hills.png";
+const background = "../../src/img/background.png";
 
 const canvas = document.getElementById("canvasBox");
 const c = canvas.getContext("2d");
@@ -35,7 +37,7 @@ class Player {
     draw(){
         const {x, y} = this.position;
         c.fillStyle = "red";
-        c.fillRect(x - this.width / 2, y - this.height / 2, this.width, this.height) 
+        c.fillRect(x - this.width / 2, y - this.height / 2, this.width, this.height ) 
     }
 }
 
@@ -55,6 +57,21 @@ class Platform {
     }
 }
 
+class GenericObject {
+    constructor({x, y, image}){
+        this.position = {
+            x,
+            y
+        };
+        this.image = image;
+        this.width = image.width;
+        this.height = canvas.height;
+    }
+
+    draw(){
+        c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height + 10);     
+    }
+}
 
 const keys = {
     right:{
@@ -72,29 +89,45 @@ const keys = {
     }
 }
 
-const image = new Image();
-image.src = platform;
+function createImage(imageSrc){
+    const image = new Image();
+    image.src = imageSrc;
+    return image
+}
+
+
 let scrollOffset = 0;
 const player = new Player();
 const platforms = [];
+const genericObjects = [];
+const hillsArray = [];
+const platformImage = createImage(platform);
+const backgroundImage = createImage(background);
+const hillsImage = createImage(hills);
 const init = () => {
     let w = 200;
     let z = 500;
-    for (let i=0; i<50; i++){
-        w += 700;
-        z -= 0;
-        platforms.push(new Platform({x: 0, y: canvas.height - image.height, image }))
-        platforms.push(new Platform({x: image.width, y: canvas.height - image.height, image }))
-        platforms.push(new Platform({x: image.width * 2, y: canvas.height - image.height, image }))
-        platforms.push(new Platform({x: w, y: z, image})); 
-    }
-
+    w += 700;
+    z -= 0;
+    platforms.push(new Platform({x: 0, y: canvas.height - platformImage.height, image: platformImage }))
+    platforms.push(new Platform({x: platformImage.width - 3, y: canvas.height - platformImage.height, image: platformImage }))
+    platforms.push(new Platform({x: platformImage.width * 2 + 100, y: canvas.height - platformImage.height, image: platformImage }))
+    genericObjects.push(new GenericObject({x: -1, y: -1, image: backgroundImage}))
+    genericObjects.push(new GenericObject({x: -1, y: -1, image: hillsImage}))
 }
 
 const animate = () => {
     const animationFrame = requestAnimationFrame(animate);
     c.fillStyle = "white";
     c.fillRect(0, 0, canvas.width, canvas.height);
+
+    genericObjects.forEach(genericObject => {
+        genericObject.draw();
+    })
+
+    hillsArray.forEach(hill => {
+        hill.draw();
+    })
 
     if(keys.right.pressed && player.position.x <= canvas.width / 2){
         player.velocity.x = 5;
@@ -107,10 +140,16 @@ const animate = () => {
             platforms.forEach(platform => {
                 platform.position.x -= 5;
             })
+            genericObjects.forEach(genericObject => {
+                genericObject.position.x -= 3;
+            })
         }else if(keys.left.pressed){
             scrollOffset -= 5;
             platforms.forEach(platform => {
                 platform.position.x += 5;
+            })
+            genericObjects.forEach(genericObject => {
+                genericObject.position.x += 3;
             })
         }
     }
@@ -138,6 +177,8 @@ const animate = () => {
             console.log("you lost");
         }
     })
+
+    
     
     if (scrollOffset > 2000){
         console.log("You won");
