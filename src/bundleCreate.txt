@@ -1,1 +1,2 @@
 browserify ./src/js/mario.js -o ./src/js/bundle.js
+watchify ./src/js/main.js -o ./src/js/bundle.js

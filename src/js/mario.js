@@ -21,6 +21,7 @@ class Player {
             x: 0,
             y: 0
         }
+        this.speed = 15;
     }
 
     update(){
@@ -29,9 +30,9 @@ class Player {
         this.position.x += this.velocity.x;
         if (this.position.y < canvas.height - this.height / 2 - this.velocity.y){
             this.velocity.y += gravity;
-        }else{
+        }/*else{
             this.velocity.y = 0;            
-        }
+        }*/
     }
 
     draw(){
@@ -97,21 +98,28 @@ function createImage(imageSrc){
 
 
 let scrollOffset = 0;
-const player = new Player();
-const platforms = [];
-const genericObjects = [];
-const hillsArray = [];
-const platformImage = createImage(platform);
-const backgroundImage = createImage(background);
-const hillsImage = createImage(hills);
+let player = new Player();
+let platforms = [];
+let genericObjects = [];
+let hillsArray = [];
+let platformImage = createImage(platform);
+let backgroundImage = createImage(background);
+let hillsImage = createImage(hills);
 const init = () => {
+    scrollOffset = 0;
+    player = new Player();
+    platforms = [];
+    genericObjects = [];
+    hillsArray = [];
     let w = 200;
     let z = 500;
     w += 700;
     z -= 0;
+    platforms.push(new Platform({x: 0 - platformImage.width, y: canvas.height - platformImage.height, image: platformImage }))
     platforms.push(new Platform({x: 0, y: canvas.height - platformImage.height, image: platformImage }))
     platforms.push(new Platform({x: platformImage.width - 3, y: canvas.height - platformImage.height, image: platformImage }))
     platforms.push(new Platform({x: platformImage.width * 2 + 100, y: canvas.height - platformImage.height, image: platformImage }))
+    platforms.push(new Platform({x: platformImage.width * 3 + 300, y: canvas.height - platformImage.height - 200, image: platformImage }))
     genericObjects.push(new GenericObject({x: -1, y: -1, image: backgroundImage}))
     genericObjects.push(new GenericObject({x: -1, y: -1, image: hillsImage}))
 }
@@ -130,33 +138,33 @@ const animate = () => {
     })
 
     if(keys.right.pressed && player.position.x <= canvas.width / 2){
-        player.velocity.x = 5;
+        player.velocity.x = player.speed;
     }else if(keys.left.pressed && player.position.x >= 100){
-        player.velocity.x = -5;
+        player.velocity.x = -player.speed;
     }else{
         player.velocity.x = 0;
         if (keys.right.pressed){
-            scrollOffset += 5;     
+            scrollOffset += player.speed;     
             platforms.forEach(platform => {
-                platform.position.x -= 5;
+                platform.position.x -= player.speed;
             })
             genericObjects.forEach(genericObject => {
-                genericObject.position.x -= 3;
+                genericObject.position.x -= player.speed - 3;
             })
-        }else if(keys.left.pressed){
-            scrollOffset -= 5;
+        }else if(keys.left.pressed && scrollOffset != 0){
+            scrollOffset -= player.speed;
             platforms.forEach(platform => {
-                platform.position.x += 5;
+                platform.position.x += player.speed;
             })
             genericObjects.forEach(genericObject => {
-                genericObject.position.x += 3;
+                genericObject.position.x += player.speed - 3;
             })
         }
     }
 
     // jumping 
     if(keys.up.pressed && keys.up.count <= 1){
-        player.velocity.y = -20;
+        player.velocity.y = -15;
         keys.up.count++;
     }
 
@@ -169,12 +177,13 @@ const animate = () => {
         && player.position.y + player.height / 2+ player.velocity.y >= platform.position.y
         && (player.position.x + player.width / 2 >= platform.position.x && player.position.x <= platform.position.x + platform.width)){
             player.velocity.y = 0;
-            keys.up.count = 0;
+            keys.up.count = 0;s
         }
         //detection if player touched bottom
-        if(player.position.y == canvas.height - player.height / 2 - player.velocity.y){
-            keys.up.count = 0;
-            console.log("you lost");
+        if(player.position.y >= canvas.height){
+            /*keys.up.count = 0;*/
+            // console.log("you lost");
+            init();
         }
     })
 
